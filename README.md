@@ -16,6 +16,13 @@ felt like doing it on a Pi and it was easy to use existing python modules for
 the sun position calculations. This also leaves the door open for potential 
 future features to add remote control if you use a WiFi equipped model.
 
+## Supported hardware
+
+- **12V 4PIN RGB (+12V,G,R,B)**  
+  Uses `pi-blaster` and PWM signal
+
+- **5V WS2812B (+5V,DATA,GND)**    
+  Uses `neopixel` library (Needs sudo)
 
 ## Install
 The program doesn't install and is just used directly with `./rgb-daylight.py`. It has 

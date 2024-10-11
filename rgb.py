@@ -27,6 +27,7 @@ class RGB(object):
         r = self.color[0] * self.white_balance[0] * self.intensity
         g = self.color[1] * self.white_balance[1] * self.intensity
         b = self.color[2] * self.white_balance[2] * self.intensity
+
         if(self.ws["enable"]):
             r = max(0, min(255, int(r * 255)))
             g = max(0, min(255, int(g * 255)))

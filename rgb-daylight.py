@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!python3
 from time import sleep
 from rgb import RGB
 from daylight import Daylight
@@ -14,13 +14,13 @@ args = parser.parse_args()
 config = Config("settings.json")
 # Setup RGB Light Strip
 # R,G,B LED control pins
-lights = RGB(config) 
+lights = RGB(config)
 
 # Setup Daylight Controller
 day = Daylight(config,lights)
 
 # Test option setup
-delay = 10
+delay = 1
 if args.test:
     day.test=True
     delay = 0.05
@@ -30,8 +30,17 @@ if args.test_color is not None:
     day.set_color(args.test_color)
     sys.exit()
 
-# Update Daylight Controller
-while True:
-    day.update()
-    sleep(delay)
-
+try:
+    # Update Daylight Controller
+    while True:
+        day.update()
+        sleep(delay)
+except KeyboardInterrupt:
+    print("\nProgram interrupted by user.")
+finally:
+    # Ensure cleanup of NeoPixel resources
+    if hasattr(lights, 'pixels') and lights.pixels is not None:
+        lights.pixels.fill((0, 0, 0))
+        lights.pixels.show()
+        lights.pixels.deinit()
+    print("Cleaned up NeoPixel resources.")

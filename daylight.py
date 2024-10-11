@@ -1,3 +1,5 @@
+#!python3
+
 from datetime import datetime, timezone, timedelta
 from astral import LocationInfo
 from astral.sun import sun
@@ -15,19 +17,20 @@ class Daylight(object):
         self._sun = None
         self.timezone_hours = self.config.get("timezone_offset", 0)
         self.colors_default = {
-            "night-end": [0, 0, 0.05],
-            "dawn": [0.1, 0.1, 0.3],
-            "sunrise": [0.4, 0.4, 0.4],
-            "noon": [1, 1, 1],
-            "sunset": [0.5, 0.25, 0.1],
-            "dusk": [0.3, 0.1, 0.4],
-            "night-start": [0, 0, 0.05]
+            "night-end": [0.098, 0.098, 0.439],    # Deep blue;              RGB: (25, 25, 112)
+            "dawn": [0.780, 0.667, 0.867],         # Soft lavender;          RGB: (199, 170, 221)
+            "sunrise": [1.0, 0.702, 0.4],          # Soft pink-orange;       RGB: (255, 179, 102)
+            "noon": [1.0, 1.0, 0.878],             # Bright daylight white;  RGB: (255, 255, 224)
+            "sunset": [1.0, 0.549, 0.0],           # Warm golden-orange;     RGB: (255, 140, 0)
+            "dusk": [0.753, 0.376, 0.451],         # Soft reddish-purple;    RGB: (192, 96, 115)
+            "night-start": [0.173, 0.173, 0.329]   # Dark indigo;            RGB: (44, 44, 84)
         }
         self.colors = self.config.get("colors", self.colors_default)
         self.times = ['night-end', "dawn", "sunrise", "noon", "sunset", "dusk", 'night-start']
-        self.start = self.tz_fix(datetime.now())
+        self.start = self.tz_fix(datetime.now(self.timezone))
         self.location = LocationInfo(self.position['timezone'], self.position['timezone'], self.position['latitude'], self.position['longitude'])
-        self.test = False
+        self.debug = False
+        self.verbose = False
 
     def set_color(self, color):
         self.lights.color = self.colors[color]
@@ -35,6 +38,7 @@ class Daylight(object):
     def update(self):
         self._sun = self.sun  # Cache results of sun property
         s = self._sun
+        current_time = self.current_time()
 
         sun_info = {
             'night-end': s['night-end'].astimezone(self.timezone),
@@ -46,28 +50,6 @@ class Daylight(object):
             'night-start': s['night-start'].astimezone(self.timezone)
         }
 
-        current_time = self.current_time()
-
-        output = (
-            f"Time: {current_time}\n"
-            f"Sun:\n"
-            f"  Night-end: {sun_info['night-end'].strftime('%H:%M')}\n"
-            f"  Dawn: {sun_info['dawn'].strftime('%H:%M')}\n"
-            f"  Sunrise: {sun_info['sunrise'].strftime('%H:%M')}\n"
-            f"  Noon: {sun_info['noon'].strftime('%H:%M')}\n"
-            f"  Sunset: {sun_info['sunset'].strftime('%H:%M')}\n"
-            f"  Dusk: {sun_info['dusk'].strftime('%H:%M')}\n"
-            f"  Night-start: {sun_info['night-start'].strftime('%H:%M')}\n"
-        )
-
-        try:
-            sys.stdout.write("\x1b[2J")
-            sys.stdout.write("\x1b[H")
-            sys.stdout.write(output + "\n")
-            sys.stdout.flush()
-        except Exception as e:
-            print(f"Error in output clearing: {e}")
-
         for key, time in enumerate(self.times):
             next_time = key + 1 if key + 1 < len(self.times) else 0
             if key == len(self.times) - 1:
@@ -77,6 +59,27 @@ class Daylight(object):
             elif sun_info[time] <= current_time < sun_info[self.times[next_time]]:
                 self.lights.color = self.smooth(time, self.times[next_time])
                 break
+
+        if (self.verbose):
+            output = (
+                f"Time: {current_time}\n"
+                f"Current sun: {time}\n"
+                f"Astral calculated sun (with timezone corrections):\n"
+                f"  Night-end: {sun_info['night-end'].strftime('%H:%M')}\n"
+                f"  Dawn: {sun_info['dawn'].strftime('%H:%M')}\n"
+                f"  Sunrise: {sun_info['sunrise'].strftime('%H:%M')}\n"
+                f"  Noon: {sun_info['noon'].strftime('%H:%M')}\n"
+                f"  Sunset: {sun_info['sunset'].strftime('%H:%M')}\n"
+                f"  Dusk: {sun_info['dusk'].strftime('%H:%M')}\n"
+                f"  Night-start: {sun_info['night-start'].strftime('%H:%M')}\n"
+            )
+            try:
+                sys.stdout.write("\x1b[2J")
+                sys.stdout.write("\x1b[H")
+                sys.stdout.write(output + "\n")
+                sys.stdout.flush()
+            except Exception as e:
+                print(f"Error in output clearing: {e}")
 
     def smooth(self, start, end):
         ratio = (self.current_time() - self._sun[start]).total_seconds() / (self._sun[end] - self._sun[start]).total_seconds()
@@ -90,14 +93,21 @@ class Daylight(object):
         return color
 
     def current_time(self):
-        if self.test:
+        if self.debug:
             self.start += timedelta(minutes=0.25)
             return self.start
         else:
-            return pytz.UTC.localize(self.tz_fix(datetime.now()))
+            local_now = datetime.now(self.timezone)
+            return local_now
 
     def tz_fix(self, dt):
-        return dt.astimezone(self.timezone)
+        # Ensure the datetime is aware and in the desired timezone
+        # If naive, localize it
+        if dt.tzinfo is None:
+            return self.timezone.localize(dt)
+        else:
+            # Convert it to the desired timezone if already aware
+            return dt.astimezone(self.timezone)
 
     @property
     def sun(self):

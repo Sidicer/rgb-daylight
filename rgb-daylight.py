@@ -1,4 +1,5 @@
 #!python3
+
 from time import sleep
 from rgb import RGB
 from daylight import Daylight
@@ -6,28 +7,29 @@ from config import Config
 import argparse
 import sys
 
-parser = argparse.ArgumentParser(description='Daylight simulator launch options')
-parser.add_argument('--test', action="store_true",  help='Rapidly cycle colors')
-parser.add_argument('--test-color', action="store",  help='Set to a specific daytime color')
+parser = argparse.ArgumentParser(description="Daylight simulator launch options")
+parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
+parser.add_argument("-d", "--debug", action="store_true",  help="Rapidly cycle colors")
+parser.add_argument("-c", "--color-test", action="store",  help="Set to a specific daytime color")
 args = parser.parse_args()
 
+# Init configuration, rgb and daylight classes
 config = Config("settings.json")
-# Setup RGB Light Strip
-# R,G,B LED control pins
 lights = RGB(config)
-
-# Setup Daylight Controller
-day = Daylight(config,lights)
-
-# Test option setup
+day = Daylight(config, lights)
+# How often should the script be updated
 delay = 1
-if args.test:
-    day.test=True
-    delay = 0.05
 
-# Test color and quit if set
-if args.test_color is not None:
-    day.set_color(args.test_color)
+if args.verbose:
+    day.verbose = True
+
+# Additional sets for debug
+if args.debug:
+    day.debug = True
+    delay = 0.005
+
+if args.color_test is not None:
+    day.set_color(args.color_test)
     sys.exit()
 
 try:
@@ -39,7 +41,7 @@ except KeyboardInterrupt:
     print("\nProgram interrupted by user.")
 finally:
     # Ensure cleanup of NeoPixel resources
-    if hasattr(lights, 'pixels') and lights.pixels is not None:
+    if hasattr(lights, "pixels") and lights.pixels is not None:
         lights.pixels.fill((0, 0, 0))
         lights.pixels.show()
         lights.pixels.deinit()

@@ -9,7 +9,7 @@ class RGB(object):
         self.config=config
         self._white_balance = self.config.get("white_balance",[1,1,1])
         self._intensity = self.config.get("intensity",1)
-        self.ws = self.config.get("led_ws",{"enable":1,"pin":"D18","count":20,"brightness":0.5})
+        self.ws = self.config.get("led_ws",{"enable":1,"pin":"D18","count":20,"brightness":1})
         self.led_pins = self.config.get("led_pins",{"r":22,"g":27,"b":17})
         self._color = [0,0,0]
 
@@ -29,6 +29,7 @@ class RGB(object):
         b = self.color[2] * self.white_balance[2] * self.intensity
 
         if(self.ws["enable"]):
+            # Normalized range to 8-bit range conversion
             r = max(0, min(255, int(r * 255)))
             g = max(0, min(255, int(g * 255)))
             b = max(0, min(255, int(b * 255)))

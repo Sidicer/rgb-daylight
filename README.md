@@ -24,33 +24,46 @@ future features to add remote control if you use a WiFi equipped model.
 - **5V WS2812B (+5V,DATA,GND)**    
   Uses `neopixel` library (Needs sudo)
 
-## Install
-The program doesn't install and is just used directly with `./rgb-daylight.py`. It has 
-the following dependancies
+## Quickstart
 
- - [astral](https://pypi.org/project/astral/): `sudo pip3 install astral`
- - [pi-blaster](https://github.com/sarfata/pi-blaster/): Clone git repo and standard autoconf install
+```sh
+git clone https://github.com/AkBKukU/rgb-daylight.git && cd rgb-daylight
+./prepare.sh
+./run.sh
+```
+
+> [!NOTE]
+> WS2812B requires sudo access
+> `sudo ./run.sh` will be required
+
+## Dependencies
+The program doesn't install and is just used directly with `./run.sh` or `python3 src/rgb-daylight.py`. It has 
+the following dependancies:
+
+Python:  
+ - [astral](https://pypi.org/project/astral/)
+ - [neopixel](https://pypi.org/project/neopixel/) *for WS2812B*
+ - [board](https://pypi.org/project/board/) *for WS2812B*
+```sh
+./prepare.sh
+# or
+pip3 install -r requirements.txt
+```
+
+System:  
+ - [pi-blaster](https://github.com/sarfata/pi-blaster/): *for 12V 4PIN*
 
 *You may need to manually run `pi-blaster` after installing it the first time 
 or just reboot*
 
-Once everything is installed you can just download these files and run them:
- 
-     git clone https://github.com/AkBKukU/rgb-daylight
-     cd rgb-daylight
-     ./rgb-daylight
-
-After that you can quit it with `ctrl+c` and then go through the [Setup](#setup) steps
-to configure it for your use.
-
-### Installation Method 1
+### Autostart method 1
 If you have your pi auto login and want the program to run on boot, add the following
 lines to the `/home/pi/.bashrc` file:
+```
+/path/to/rgb-daylight/run.sh
+```
 
-     cd rgb-daylight
-     ./rgb-daylight
-
-### Installation Method 2
+### Autostart method 2
 If you prefer to create a service instead, move `rgb-daylight.service` to `/lib/systemd/system` and run the following:
 `sudo systemctl daemon-reload`
 `sudo systemctl enable rgb-daylight.service`
@@ -79,6 +92,10 @@ values match the schematic but if you made changes you will need to update those
 to match your build. The allowed pins are limited by [pi-blaster](https://github.com/sarfata/pi-blaster/)
 so you should look at the documentation for that for info on which ones you can
 use.
+
+#### `led_ws`
+Here you can enable or disable `WS2812B` compatibility. Change `enable` to either `1` or `0` accordingly  
+If enabled - set `pin` to the correct **DATA** PIN on your raspberry pi (D18 is PIN12 (GPIO 18))
 
 #### `intensity`
 This is the overall brightness of the lights as controlled by the PWM. It takes
